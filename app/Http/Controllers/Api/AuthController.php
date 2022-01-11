@@ -7,40 +7,23 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Carbon\Carbon;
+use App\Http\Requests\User\RegisterRequest;
 
 class AuthController extends Controller
 {
-    // /**
-    //  * Create a new AuthController instance.
-    //  *
-    //  * @return void
-    //  */
-    // public function __construct()
-    // {
-    //     $this->middleware('auth:api', ['except' => ['login']]);
-    // }
-
-        /**
-     * Get a JWT via given credentials.
-     *
-     * @return \Illuminate\Http\JsonResponse
-     */
-    public function register(Request $request)
+    public function register(RegisterRequest $request)
     {
-        $data = $this->validate($request, [
-            'avatar' => 'nullable|image',
-            'name' => 'required',
-            'email' => 'required',
-            'password' => 'required',
-        ]);
+        $data = $request->validated();
         $imageName = time().'.'.$request->avatar->extension();  
         // dd($imageName);
         $request->avatar->move('avatars', $imageName);
         $data['avatar'] = $imageName;
+        $data['lock_time'] = Carbon::now('Asia/Ho_Chi_Minh');
         $data['password'] = Hash::make($request->password); 
         $user = User::create($data);
 
-       return response()->json($user);
+        return response()->json($user);
     }
 
     /**
@@ -51,12 +34,27 @@ class AuthController extends Controller
     public function login()
     {
         $credentials = request(['email', 'password']);
-
-        if (! $token = auth()->attempt($credentials)) {
-            return response()->json(['error' => 'Unauthorized'], 401);
+        
+        $token = auth()->attempt($credentials);
+        $user = auth()->user();
+        if($user->status == 1) {
+            return $this->respondWithToken($token);
+        } else {
+            return response()->json(['error' => 'your account has been locked']);
         }
-
-        return $this->respondWithToken($token);
+        // return response()->json($user);
+        // if (! $token = auth()->attempt($credentials)) {
+        //     return response()->json(['error' => 'Unauthorized'], 401);
+        // }
+        // $lockUser = User::first();
+        // return response()->json($lockUser);
+        // if($lockUser->status != 2) {
+        //     return $this->respondWithToken($token);
+            
+        // } else {
+        //     return response()->json(['error' => 'your account has been locked']);
+        // }
+        // return $this->respondWithToken($token);
     }
 
     /**
@@ -70,7 +68,7 @@ class AuthController extends Controller
     }
 
     /**
-     * Get the authenticated User.
+     * Change password User.
      *
      * @return \Illuminate\Http\JsonResponse
      */

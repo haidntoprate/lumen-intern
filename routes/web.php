@@ -21,6 +21,8 @@ $router->get('/', function () use ($router) {
 $router->group(['prefix' => 'api'], function () use ($router) {
     $router->post('/login', 'Api\AuthController@login');
     $router->post('/register', 'Api\AuthController@register');
+    $router->post('sendPasswordResetLink', 'Api\ResetPasswordController@sendEmail');
+    $router->post('resetPassword', 'Api\ChangePasswordController@passwordResetProcess');
     $router->group(['middleware' => 'auth'], function () use ($router) {
         $router->get('/me', 'Api\AuthController@me');
         $router->get('/logout', 'Api\AuthController@logout');
@@ -28,3 +30,4 @@ $router->group(['prefix' => 'api'], function () use ($router) {
         $router->post('/change', 'Api\AuthController@changePassword');
     });
 });
+$router->get('/getuser', 'Api\AuthController@getUser');
