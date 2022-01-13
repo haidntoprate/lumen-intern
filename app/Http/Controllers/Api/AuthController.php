@@ -12,15 +12,21 @@ use App\Http\Requests\User\RegisterRequest;
 
 class AuthController extends Controller
 {
+
+    // public function __construct()
+    // {
+    //     $this->middleware(['permission:read book|edit book']);
+    // }
+
     public function register(RegisterRequest $request)
     {
         $data = $request->validated();
-        $imageName = time().'.'.$request->avatar->extension();  
+        $imageName = time() . '.' . $request->avatar->extension();
         // dd($imageName);
         $request->avatar->move('avatars', $imageName);
         $data['avatar'] = $imageName;
         $data['lock_time'] = Carbon::now('Asia/Ho_Chi_Minh');
-        $data['password'] = Hash::make($request->password); 
+        $data['password'] = Hash::make($request->password);
         $user = User::create($data);
 
         return response()->json($user);
@@ -34,10 +40,10 @@ class AuthController extends Controller
     public function login()
     {
         $credentials = request(['email', 'password']);
-        
+
         $token = auth()->attempt($credentials);
         $user = auth()->user();
-        if($user->status == 1) {
+        if ($user->status == 1) {
             return $this->respondWithToken($token);
         } else {
             return response()->json(['error' => 'your account has been locked']);
@@ -50,7 +56,7 @@ class AuthController extends Controller
         // return response()->json($lockUser);
         // if($lockUser->status != 2) {
         //     return $this->respondWithToken($token);
-            
+
         // } else {
         //     return response()->json(['error' => 'your account has been locked']);
         // }
@@ -64,7 +70,9 @@ class AuthController extends Controller
      */
     public function me()
     {
-        return response()->json(auth()->user());
+        if(auth()->user()->hasRole(['Super-Admin', 'admin', 'guest'])) {
+            return response()->json(auth()->user());
+        }
     }
 
     /**
@@ -127,6 +135,4 @@ class AuthController extends Controller
             'expires_in' => auth()->factory()->getTTL() * 60
         ]);
     }
-
-    
 }

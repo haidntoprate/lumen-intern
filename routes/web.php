@@ -23,11 +23,21 @@ $router->group(['prefix' => 'api'], function () use ($router) {
     $router->post('/register', 'Api\AuthController@register');
     $router->post('sendPasswordResetLink', 'Api\ResetPasswordController@sendEmail');
     $router->post('resetPassword', 'Api\ChangePasswordController@passwordResetProcess');
-    $router->group(['middleware' => 'auth'], function () use ($router) {
+    $router->group(['middleware' => ['permission:read book|delete book|create book|edit book|update book']], function () use ($router) {
         $router->get('/me', 'Api\AuthController@me');
         $router->get('/logout', 'Api\AuthController@logout');
         $router->post('/refresh', 'Api\AuthController@refresh');
         $router->post('/change', 'Api\AuthController@changePassword');
+        $router->get('/book', 'Api\Book\BookController@index');
+        $router->post('/create-book', 'Api\Book\BookController@store');
+        $router->get('/edit-book/{id}', 'Api\Book\BookController@edit');
+        $router->post('/update-book/{id}', 'Api\Book\BookController@update');
+        $router->delete('/delete-book/{id}', 'Api\Book\BookController@delete');
     });
 });
-$router->get('/getuser', 'Api\AuthController@getUser');
+
+
+
+// Route::group(['middleware' => ['permission:publish articles']], function () {
+//     //
+// });

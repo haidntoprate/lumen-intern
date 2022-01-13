@@ -39,13 +39,19 @@ class UnlockUser extends Command
      */
     public function handle()
     {
-        $user = User::where('status', 2)->get();
+        $user = User::where('status', '=', 2)->get();
         
         $user->each(function ($item) {
-            if ($item->block_time <= Carbon::now('Asia/Ho_Chi_Minh')) {
+            if ($item->lock_time <= Carbon::now('Asia/Ho_Chi_Minh')) {
                 $item->status = 1;
                 $item->save();
             }
         });
+        // $user = new User();
+        // $user->name = 'sae jan';
+        // $user->email = 'sae jan';
+        // $user->password = 'sae jan';
+        // $user->avatar = 'sae jan';
+        // $user->save();
     }
 }
