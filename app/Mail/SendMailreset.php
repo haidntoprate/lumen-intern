@@ -10,6 +10,7 @@ use Illuminate\Queue\SerializesModels;
 class SendMailreset extends Mailable
 {
     use Queueable, SerializesModels;
+    
     public $token;
     public $email;
 

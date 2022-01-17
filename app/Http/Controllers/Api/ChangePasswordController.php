@@ -9,6 +9,7 @@ use Symfony\Component\HttpFoundation\Response;
 use Illuminate\Support\Facades\DB;
 use App\Models\User;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Lang;
 
 class ChangePasswordController extends Controller
 {
@@ -17,21 +18,19 @@ class ChangePasswordController extends Controller
         $resutl = $this->updatePasswordRow($request)->count() > 0 ? $this->resetPassword($request) : $this->tokenNotFoundError();
         return response()->json($resutl);
     }
-
     // Verify if token is valid
     private function updatePasswordRow($request)
     {
-        return DB::table('password_resets')->where([
+        return User::where([
             'email' => $request->email,
             'token' => $request->resetToken
         ]);
     }
-
     // Token not found response  
     private function tokenNotFoundError()
     {
         return response()->json([
-            'error' => 'Either your email or token is wrong.'
+            'error' => Lang::get('auth.HTTP_UNPROCESSABLE_ENTITY')
         ], Response::HTTP_UNPROCESSABLE_ENTITY);
     }
     // Reset password
@@ -48,7 +47,7 @@ class ChangePasswordController extends Controller
 
         // reset password response
         return response()->json([
-            'data' => 'Password has been updated.'
+            Lang::get('messages.update', ['model' => 'user'])
         ], Response::HTTP_CREATED);
     }
 }

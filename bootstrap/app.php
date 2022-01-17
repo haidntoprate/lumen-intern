@@ -61,6 +61,7 @@ $app->singleton(
 
 $app->configure('app');
 $app->configure('mail');
+$app->configure('queue');
 
 $app->alias('mail.manager', Illuminate\Mail\MailManager::class);
 $app->alias('mail.manager', Illuminate\Contracts\Mail\Factory::class);
@@ -111,6 +112,8 @@ $app->register(\Anik\Form\FormRequestServiceProvider::class);
 $app->configure('permission');
 $app->alias('cache', \Illuminate\Cache\CacheManager::class);  // if you don't have this already
 $app->register(Spatie\Permission\PermissionServiceProvider::class);
+$app->register(Prettus\Repository\Providers\LumenRepositoryServiceProvider::class);
+$app->register(\App\Providers\RepositoryServiceProvider::class);
 /*
 |--------------------------------------------------------------------------
 | Load The Application Routes

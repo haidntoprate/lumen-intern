@@ -4,12 +4,22 @@ namespace App\Http\Controllers\Api\Book;
 
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Book\BookRequest;
+use App\Jobs\BookMail;
 use App\Models\Book;
 use Illuminate\Http\Request;
 use App\Models\User;
+use Symfony\Component\HttpFoundation\Response;
+use Illuminate\Support\Facades\Lang;
+use App\Repositories\BookRepository;
 
 class BookController extends Controller
 {
+    protected $bookRepository;
+
+    public function __construct(BookRepository $bookRepository)
+    {
+        $this->bookRepository = $bookRepository;
+    }
     /**
      * Display a listing of the resource.
      *
@@ -18,9 +28,12 @@ class BookController extends Controller
     public function index()
     {
         if (auth()->user()->hasRole(['Super-Admin', 'admin', 'guest'])) {
-            $book = Book::get();
+            $book = $this->bookRepository->paginate(3);
             return response()->json($book);
+        } else {
+            return response()->json(Lang::get('auth.HTTP_FORBIDDEN'));
         }
+
     }
 
     /**
@@ -43,13 +56,12 @@ class BookController extends Controller
     {
         if (auth()->user()->hasRole(['Super-Admin', 'admin'])) {
             $data = $request->validated();
-            $imageName = time() . '.' . $request->image->extension();
-            // dd($imageName);
-            $request->image->move('avatars', $imageName);
+            $imageName = $this->bookRepository->image($request->image);
             $data['image'] = $imageName;
-            $book = Book::create($data);
-
+            $book = $this->bookRepository->create($data);
             return response()->json($book);
+        } else {
+            return response()->json(['error' => Lang::get('auth.HTTP_FORBIDDEN'),'status' => Response::HTTP_FORBIDDEN]);
         }
     }
 
@@ -61,18 +73,7 @@ class BookController extends Controller
      */
     public function show($id)
     {
-        //
-    }
-
-    /**
-     * Show the form for editing the specified resource.
-     *
-     * @param  int  $id
-     * @return \Illuminate\Http\Response
-     */
-    public function edit($id)
-    {
-        $book = Book::find($id);
+        $book = $this->bookRepository->find($id);
 
         return response()->json($book);
     }
@@ -87,16 +88,14 @@ class BookController extends Controller
     public function update(BookRequest $request, $id)
     {
         if (auth()->user()->hasRole('Super-Admin')) {
-            $book = Book::find($id);
+ 
             $data = $request->validated();
-
-            $imageName = time() . '.' . $request->image->extension();
-            // dd($imageName);
-            $request->image->move('avatars', $imageName);
+            $imageName = $this->bookRepository->image($request->image);
             $data['image'] = $imageName;
-            $book->update($data);
-
+            $book = $this->bookRepository->update($data, $id);
             return response()->json($book);
+        } else {
+            return response()->json(['error' => Lang::get('auth.HTTP_FORBIDDEN'), 'status' => Response::HTTP_FORBIDDEN]);
         }
     }
 
@@ -109,11 +108,10 @@ class BookController extends Controller
     public function delete($id)
     {
         if (auth()->user()->hasRole(['Super-Admin', 'admin'])) {
-            $book = Book::find($id);
-            $book->delete();
-            return response()->json(['message' => 'delete success']);
+            $this->bookRepository->delete($id);
+            return response()->json(Lang::get('messages.delete', ['model' => 'Category']), Response::HTTP_OK);
         } else {
-            return response()->json(['error' => 'you not permission']);
+            return response()->json(['error' => 'auth.HTTP_FORBIDDEN', 'status' => Response::HTTP_FORBIDDEN]);
         }
     }
 }

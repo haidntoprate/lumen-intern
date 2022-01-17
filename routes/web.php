@@ -30,7 +30,7 @@ $router->group(['prefix' => 'api'], function () use ($router) {
         $router->post('/change', 'Api\AuthController@changePassword');
         $router->get('/book', 'Api\Book\BookController@index');
         $router->post('/create-book', 'Api\Book\BookController@store');
-        $router->get('/edit-book/{id}', 'Api\Book\BookController@edit');
+        $router->get('/edit-book/{id}', 'Api\Book\BookController@show');
         $router->post('/update-book/{id}', 'Api\Book\BookController@update');
         $router->delete('/delete-book/{id}', 'Api\Book\BookController@delete');
     });

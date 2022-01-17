@@ -47,11 +47,5 @@ class UnlockUser extends Command
                 $item->save();
             }
         });
-        // $user = new User();
-        // $user->name = 'sae jan';
-        // $user->email = 'sae jan';
-        // $user->password = 'sae jan';
-        // $user->avatar = 'sae jan';
-        // $user->save();
     }
 }

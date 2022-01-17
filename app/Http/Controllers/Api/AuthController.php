@@ -9,25 +9,26 @@ use App\Models\User;
 use Illuminate\Support\Facades\Hash;
 use Carbon\Carbon;
 use App\Http\Requests\User\RegisterRequest;
+use Illuminate\Support\Facades\Lang;
+use App\Repositories\UserRepository;
 
 class AuthController extends Controller
 {
+    protected $userRepository;
 
-    // public function __construct()
-    // {
-    //     $this->middleware(['permission:read book|edit book']);
-    // }
+    public function __construct(UserRepository $userRepository)
+    {
+        $this->userRepository = $userRepository;
+    }
 
     public function register(RegisterRequest $request)
     {
         $data = $request->validated();
-        $imageName = time() . '.' . $request->avatar->extension();
-        // dd($imageName);
-        $request->avatar->move('avatars', $imageName);
+        $imageName = $this->userRepository->image($request->avatar);
         $data['avatar'] = $imageName;
         $data['lock_time'] = Carbon::now('Asia/Ho_Chi_Minh');
         $data['password'] = Hash::make($request->password);
-        $user = User::create($data);
+        $user = $this->userRepository->create($data);
 
         return response()->json($user);
     }
@@ -46,21 +47,8 @@ class AuthController extends Controller
         if ($user->status == 1) {
             return $this->respondWithToken($token);
         } else {
-            return response()->json(['error' => 'your account has been locked']);
+            return response()->json(Lang::get('auth.lock-user'));
         }
-        // return response()->json($user);
-        // if (! $token = auth()->attempt($credentials)) {
-        //     return response()->json(['error' => 'Unauthorized'], 401);
-        // }
-        // $lockUser = User::first();
-        // return response()->json($lockUser);
-        // if($lockUser->status != 2) {
-        //     return $this->respondWithToken($token);
-
-        // } else {
-        //     return response()->json(['error' => 'your account has been locked']);
-        // }
-        // return $this->respondWithToken($token);
     }
 
     /**
@@ -70,9 +58,7 @@ class AuthController extends Controller
      */
     public function me()
     {
-        if(auth()->user()->hasRole(['Super-Admin', 'admin', 'guest'])) {
-            return response()->json(auth()->user());
-        }
+        return response()->json(auth()->user());
     }
 
     /**
@@ -89,11 +75,11 @@ class AuthController extends Controller
         $user = auth()->user();
         if (!Hash::check($data['old_password'], $user->password)) {
 
-            return response()->json(['error' => 'You have entered wrong password']);
+            return response()->json(Lang::get('auth.failed-change-password'));
         } else {
             $user->password = Hash::make($data['new_password']);
             $user->save();
-            return response()->json(['message' => 'changepassword thanh cong']);
+            return response()->json(Lang::get('auth.change-password'));
         }
         return response()->json(auth()->user());
     }
@@ -107,7 +93,7 @@ class AuthController extends Controller
     {
         auth()->logout();
 
-        return response()->json(['message' => 'Successfully logged out']);
+        return response()->json(Lang::get('auth.logout'));
     }
 
     /**
